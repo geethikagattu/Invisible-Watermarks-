@@ -34,9 +34,13 @@ the [official PyTorch installation selector](https://pytorch.org/get-started/loc
 
 ## Dataset
 
-The script does not download datasets. Download and unpack your image dataset
-separately, respecting its license. It scans image directories recursively and
-supports `.jpg`, `.jpeg`, `.png`, `.tif`, `.tiff`, and `.bmp` files.
+The dataset used for the reported experiments is CASIA 2.0, containing
+authentic images, tampered images, and ground-truth masks. The dataset is not
+included in this repository; obtain it separately, respecting its license,
+and place the files as described below.
+
+The script does not download datasets. It scans image directories recursively
+and supports `.jpg`, `.jpeg`, `.png`, `.tif`, `.tiff`, and `.bmp` files.
 
 Pass the image directory with `--images`. For meaningful localization results,
 also pass binary ground-truth masks with `--masks`. Each mask should have the
@@ -56,12 +60,16 @@ data/
     └── image02_gt.png
 ```
 
-If a usable matching mask is not found, the script substitutes a randomly
-generated region mask; this is useful for exercising the pipeline but is not a
-replacement for labeled masks in a real experiment.
+For validation and testing, a usable matching ground-truth mask is used when
+available. If a mask is missing or has fewer than 16 foreground pixels, the
+script generates a random rectangle or ellipse instead. Random masks are
+deterministic for validation and test samples. During training, the script
+sometimes substitutes a random mask even when a ground-truth mask exists.
 
-The image list is shuffled with a fixed seed and split into 80% training, 10%
-validation, and 10% test sets. The split is performed by image, before training.
+Images are resized to 128x128 by default (the reported setup uses this size).
+The image list is shuffled with a fixed seed and split by image into 80%
+training, 10% validation, and 10% test sets. With the complete CASIA 2.0 image
+set used in the reported experiments, the test split contains 1,262 images.
 
 ## Run
 
