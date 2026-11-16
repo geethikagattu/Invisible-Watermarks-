@@ -60,6 +60,21 @@ def index_masks(root):
     return idx
 
 
+def download_kaggle_dataset(dataset, destination):
+    parts = dataset.split("/")
+    if len(parts) != 2 or not all(parts):
+        raise SystemExit("--kaggle-dataset must be in owner/dataset format")
+    try:
+        from kaggle.api.kaggle_api_extended import KaggleApi
+    except ImportError as exc:
+        raise SystemExit("Install the Kaggle package with: pip install kaggle") from exc
+
+    os.makedirs(destination, exist_ok=True)
+    api = KaggleApi()
+    api.authenticate()
+    api.dataset_download_files(dataset, path=destination, unzip=True)
+
+
 class Data(Dataset):
     def __init__(self, files, masks, size, train, synth=0):
         self.files, self.masks, self.size, self.train, self.synth = files, masks, size, train, synth
@@ -361,6 +376,9 @@ def saliency_examples(enc, ext, loader, out, n=4):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--images"); ap.add_argument("--masks")
+    ap.add_argument("--kaggle-dataset", help="Download a Kaggle dataset (owner/dataset)")
+    ap.add_argument("--kaggle-dir", default="data/CASIA2",
+                    help="directory to download and extract the Kaggle dataset")
     ap.add_argument("--synthetic", action="store_true")
     ap.add_argument("--size", type=int, default=128)
     ap.add_argument("--epochs", type=int, default=15)
@@ -372,6 +390,14 @@ def main():
     ap.add_argument("--w_msg", type=float, default=5.0, help="weight of message-bit loss")
     ap.add_argument("--out", default="results")
     a = ap.parse_args()
+    if a.synthetic and a.kaggle_dataset:
+        ap.error("--synthetic and --kaggle-dataset cannot be used together")
+    if a.kaggle_dataset:
+        download_kaggle_dataset(a.kaggle_dataset, a.kaggle_dir)
+        a.images = a.images or a.kaggle_dir
+        a.masks = a.masks or a.kaggle_dir
+    elif not a.synthetic and not a.images:
+        ap.error("provide --images or use --synthetic/--kaggle-dataset")
     global NBITS, W_MSG
     NBITS, W_MSG = a.nbits, a.w_msg
     os.makedirs(a.out, exist_ok=True)

@@ -36,17 +36,40 @@ the [official PyTorch installation selector](https://pytorch.org/get-started/loc
 
 The dataset used for the reported experiments is CASIA 2.0, containing
 authentic images, tampered images, and ground-truth masks. The dataset is not
-included in this repository; obtain it separately, respecting its license,
-and place the files as described below.
+included in this repository. You can either download it through the Kaggle
+option below or download it separately, respecting its license, and provide
+its extracted image/mask directories.
 
-The script does not download datasets. It scans image directories recursively
-and supports `.jpg`, `.jpeg`, `.png`, `.tif`, `.tiff`, and `.bmp` files.
+The script scans image directories recursively and supports `.jpg`, `.jpeg`,
+`.png`, `.tif`, `.tiff`, and `.bmp` files.
 
-Pass the image directory with `--images`. For meaningful localization results,
-also pass binary ground-truth masks with `--masks`. Each mask should have the
-same filename stem as its image, or use the image stem followed by `_gt`
-(for example, `image01.jpg` and `image01_gt.png`). The script indexes mask
-files by stem and resizes them to the selected image size.
+### Kaggle credentials and download
+
+Install the requirements, then configure Kaggle API credentials on the machine
+where the script will run. Create an API token in your Kaggle account and
+provide it through the `KAGGLE_API_TOKEN` environment variable or save it in
+`~/.kaggle/access_token`. In Google Colab, use Colab Secrets to provide the
+environment variable. Do not put the token in the script, command-line
+arguments, or a committed file.
+
+Pass the Kaggle dataset identifier in `owner/dataset-slug` format. The script
+downloads and extracts it into `data/CASIA2` by default, then recursively scans
+that directory for images and masks:
+
+```bash
+python maskmark_full-3.py \
+  --kaggle-dataset "owner/dataset-slug" \
+  --epochs 15 \
+  --out results
+```
+
+Use `--kaggle-dir /content/CASIA2` in Colab or another directory to change the
+download location. If the dataset is already downloaded, pass its directories
+with `--images` and `--masks` instead. For meaningful localization results,
+provide binary ground-truth masks. Each mask should have the same filename
+stem as its image, or use the image stem followed by `_gt` (for example,
+`image01.jpg` and `image01_gt.png`). The script indexes mask files by stem and
+resizes them to the selected image size.
 
 Example layout:
 
@@ -83,6 +106,8 @@ python maskmark_full-3.py --synthetic --epochs 2 --out results
 ```
 
 ### Train and test with your dataset
+
+For an already-downloaded dataset:
 
 ```bash
 python maskmark_full-3.py \
